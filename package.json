@@ -6,7 +6,7 @@
   "scripts": {
     "buildIndex": "cd src && copyfiles app/index.html ../build",
     "copyJSONs": "cd src && copyfiles *.json **/*.json ../build",
-    "compile": "tsc && node vendorbundler.js && webpack && webpack --config webpack.vendor.config.js",
+    "compile": "tsc && webpack",
     "build": "npm run compile && npm run copyJSONs && npm run buildIndex",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
@@ -52,5 +52,9 @@
     "tslint": "^3.8.1",
     "typescript": "^1.8.10",
     "typings": "^0.8.1"
+  },
+  "frontendDependencies": {
+    "@angular/core":  "2.0.0-rc.1",
+    "@angular/platform-browser-dynamic":  "2.0.0-rc.1"
   }
 }
