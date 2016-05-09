@@ -47,31 +47,16 @@ export default class FrontendBundler extends TinyDiInjectable {
   }
   
   createFileContent(startedPlugins: string[]) {
-    let file = `import {Component} from '@angular/core';\n`;
+    let file = `import {Component, Injectable} from '@angular/core';\n`;
     file += `declare var Reflect: any;\n`;
     file += `let components: any[] = [];\n`;
+    file += `let services: any[] = [];\n`;
+    file += `let meta: any;\n`;
     file += `declare var window: any;\n`;
     file += `window.components = components;\n`;
-    file += `window.getComponent = (name: string) => {
-      let found: any;
-      window.components.forEach((cmp: any) => {
-        meta = Reflect.getOwnMetadata('annotations', cmp);
-        if (meta && meta[0] && meta[0].selector === name) {
-          found = cmp;
-        }
-      });
-      if (found) {
-        return found;
-      }
-      
-      @Component({
-        template: '',
-        selector: 'webend-empty'
-      })
-      class WebendEmpty {}
-      return WebendEmpty;
-    };\n`;
-    file += `let meta: any;\n`;
+    file += `window.services = services;\n`;
+    file += this.getComponentFn();
+    file += this.getServiceFn();
     
     //import plugin components
     let loadedPlugins: string[] = [];
@@ -124,8 +109,13 @@ export default class FrontendBundler extends TinyDiInjectable {
       if (${plugin}) {
         Object.keys(${plugin}).forEach((exp) => {
           meta = Reflect.getOwnMetadata('annotations', (<any>${plugin})[exp]);
-          if (meta && meta[0] && meta[0].selector) {
-            components.push((<any>${plugin})[exp]);
+          if (meta && meta[0] && meta[0]) {
+            if (meta[0].constructor.name === 'ComponentMetadata') {
+              components.push((<any>${plugin})[exp]);
+            }
+            if (meta[0].constructor.name === 'InjectableMetadata') {
+              services.push((<any>${plugin})[exp]);
+            }
           }
         });
       }
@@ -133,6 +123,46 @@ export default class FrontendBundler extends TinyDiInjectable {
     
     loadedPlugins.push(plugin);
     return file;
+  }
+  
+  getComponentFn() {
+    return `window.getComponent = (name: string) => {
+      let found: any;
+      window.components.forEach((cmp: any) => {
+        meta = Reflect.getOwnMetadata('annotations', cmp);
+        if (meta && meta[0] && meta[0].selector === name) {
+          found = cmp;
+        }
+      });
+      if (found) {
+        return found;
+      }
+      
+      @Component({
+        template: '',
+        selector: 'webend-empty'
+      })
+      class WebendEmpty {}
+      return WebendEmpty;
+    };\n`;
+  }
+  
+  getServiceFn() {
+    return `window.getService = (name: string) => {
+      let found: any;
+      window.services.forEach((srv: any) => {
+        if (srv.name === name) {
+          found = srv;
+        }
+      });
+      if (found) {
+        return found;
+      }
+      
+      @Injectable()
+      class WebendEmptyService {}
+      return WebendEmptyService;
+    };\n`;
   }
 }
 FrontendBundler.$inject = {

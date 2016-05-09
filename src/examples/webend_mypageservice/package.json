@@ -1,7 +1,7 @@
 {
-  "name": "webend_mypage",
+  "name": "webend_mypageservice",
   "version": "1.0.0",
-  "description": "test package for frontend",
+  "description": "test service for frontend",
   "keywords": [],
   "author": {
     "name": "Daniel Schuech",
@@ -15,10 +15,6 @@
   "webendConfig": {
     
   },
-  "browser": "main",
-  "main": "",
-  "optionalDependencies": {
-    "webend_mypageaddon": "1.0.0",
-    "webend_mypageservice": "1.0.0"
-  }
+  "browser": "service",
+  "main": ""
 }
