@@ -9,7 +9,7 @@ export default class HUB extends TinyDiInjectable {
   private injector: TinyDiInjector;
   private app: express.Application;
   
-  constructor(_config: any, deps: any) {
+  constructor(_config: any, deps: any, status: any) {
     super();
     
     let config = _config['webend_hub'];
@@ -18,6 +18,7 @@ export default class HUB extends TinyDiInjectable {
     this.injector.setResolver(this.dependencyResolver);
     this.injector.bind('config').to(config);
     this.injector.bind('dependencies').to(deps);
+    this.injector.bind('status').to(status);
     
     this.app = express();
     this.injector.bind('server').to(this.app);
@@ -52,6 +53,6 @@ export default class HUB extends TinyDiInjectable {
   }
 }
 HUB.$inject = {
-  deps: ['config', 'dependencies'],
+  deps: ['config', 'dependencies', 'status'],
   callAs: 'class'
 };

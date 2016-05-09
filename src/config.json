@@ -1,6 +1,7 @@
 {
   "server": {
     "modules": [
+      {"module": "modules/pluginsystem"},
       {"module": "modules/static"},
       {"module": "modules/bundler"}
     ]
