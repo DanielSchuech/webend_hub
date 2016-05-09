@@ -5,8 +5,8 @@ let MyPageService = window.getService('MyPageService');
 @Component({
   moduleId: module.id,
   selector: 'webend_mypage',
-  template: 'this my page!!! <my-addon></my-addon> {{secret}}',
-  directives: [window.getComponent('my-addon')],
+  template: '<span my-highlight>this my page!!!</span> <my-addon></my-addon> {{secret}}',
+  directives: [window.getComponent('my-addon'), window.getComponent('[my-highlight]')],
   providers: [MyPageService]
 })
 export class webend_mypageComponent implements OnInit {

@@ -110,7 +110,8 @@ export default class FrontendBundler extends TinyDiInjectable {
         Object.keys(${plugin}).forEach((exp) => {
           meta = Reflect.getOwnMetadata('annotations', (<any>${plugin})[exp]);
           if (meta && meta[0] && meta[0]) {
-            if (meta[0].constructor.name === 'ComponentMetadata') {
+            if (meta[0].constructor.name === 'ComponentMetadata' ||
+                meta[0].constructor.name === 'DirectiveMetadata') {
               components.push((<any>${plugin})[exp]);
             }
             if (meta[0].constructor.name === 'InjectableMetadata') {

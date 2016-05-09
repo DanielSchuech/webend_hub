@@ -11,3 +11,5 @@ export class MyAddonComponent implements OnInit {
   ngOnInit() { }
 
 }
+
+export { MyHighlightDirective } from './directive';
