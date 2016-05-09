@@ -1,4 +1,7 @@
-import {bootstrap}    from '@angular/platform-browser-dynamic';
-import {AppComponent} from './app.component';
+import 'zone.js/dist/zone';
+import 'reflect-metadata';
 
-bootstrap(AppComponent);
+import {bootstrap}    from '@angular/platform-browser-dynamic';
+import {HubComponent} from './app.component';
+
+bootstrap(HubComponent);

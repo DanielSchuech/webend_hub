@@ -1,0 +1,23 @@
+{
+  "name": "webend_mypage",
+  "version": "1.0.0",
+  "description": "test package for frontend",
+  "keywords": [],
+  "author": {
+    "name": "Daniel Schuech",
+    "email": "dschuech@gmail.com"
+  },
+  "license": "MIT",
+  "homepage": "https://github.com/DanielSchuech",
+  "devDependencies": {},
+  "dependencies": {
+  },
+  "webendConfig": {
+    
+  },
+  "browser": "main",
+  "main": "",
+  "optionalDependencies": {
+    "webend_mypageaddon": "1.0.0"
+  }
+}
