@@ -1,7 +1,7 @@
 {
-  "name": "webend_mypageservice",
+  "name": "webend_mypageuseng1",
   "version": "1.0.0",
-  "description": "test service for frontend",
+  "description": "ng2 test package for frontend which uses an ng1 directive",
   "keywords": [],
   "author": {
     "name": "Daniel Schuech",
@@ -11,13 +11,16 @@
   "homepage": "https://github.com/DanielSchuech",
   "devDependencies": {},
   "dependencies": {
+    "webend_myng1pageaddon": "1.0.0"
   },
   "webendConfig": {
     
   },
   "browser": {
-    "entry": "service",
+    "entry": "main",
     "framework": "angular2"
   },
-  "main": ""
+  "main": "",
+  "optionalDependencies": {
+  }
 }

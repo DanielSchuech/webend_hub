@@ -1,7 +1,11 @@
 import 'zone.js/dist/zone';
 import 'reflect-metadata';
+import 'angular';
+import {ngAdapter} from 'ngAdapter/build/ngAdapter';
 
-import {bootstrap}    from '@angular/platform-browser-dynamic';
-import {HubComponent} from './app.component';
+declare var window: any;
+window.adapter = new ngAdapter(angular.module('webendApp', []));
 
-bootstrap(HubComponent);
+import './app.component';
+
+window.adapter.bootstrap(document.body, ['webendApp']);

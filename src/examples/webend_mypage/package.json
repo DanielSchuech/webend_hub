@@ -15,7 +15,10 @@
   "webendConfig": {
     
   },
-  "browser": "main",
+  "browser": {
+    "entry": "main",
+    "framework": "angular2"
+  },
   "main": "",
   "optionalDependencies": {
     "webend_mypageaddon": "1.0.0",

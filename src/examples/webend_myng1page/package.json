@@ -1,7 +1,7 @@
 {
-  "name": "webend_mypageservice",
+  "name": "webend_myng1page",
   "version": "1.0.0",
-  "description": "test service for frontend",
+  "description": "test package for ng1 frontend",
   "keywords": [],
   "author": {
     "name": "Daniel Schuech",
@@ -16,8 +16,11 @@
     
   },
   "browser": {
-    "entry": "service",
-    "framework": "angular2"
+    "entry": "main",
+    "framework": "angular"
   },
-  "main": ""
+  "optionalDependencies": {
+    "webend_mypageservice": "1.0.0",
+    "webend_myng1pageaddon": "1.0.0"
+  }
 }

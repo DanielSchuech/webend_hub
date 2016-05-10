@@ -15,6 +15,9 @@
   "webendConfig": {
     
   },
-  "browser": "main",
+  "browser": {
+    "entry": "main",
+    "framework": "angular2"
+  },
   "main": ""
 }
