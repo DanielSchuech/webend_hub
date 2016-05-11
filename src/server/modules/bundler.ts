@@ -71,18 +71,6 @@ export default class FrontendBundler extends TinyDiInjectable {
       file += this.addPlugin(startedPlugins, plugin, loadedPlugins);
     });
     
-    //create component
-    // file += `@Component({\n`;
-    // file += `  selector: 'webend-hub',\n`;
-    // file += `  template: '`;
-    // startedPlugins.forEach((plugin) => {
-    //   file += `<${plugin}></${plugin}>`;
-    // });
-    // file += `',\n`;
-    // file += `  directives: [...components]\n`;
-    // file += `})\n`;
-    // file += `export class HubComponent {}`;
-    
     file += `
       module.component('webendHub', {
           template: \`
