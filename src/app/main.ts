@@ -1,7 +1,7 @@
 import 'zone.js/dist/zone';
 import 'reflect-metadata';
 import 'angular';
-import {ngAdapter} from 'ngAdapter/build/ngAdapter';
+import {ngAdapter} from 'ngadapter/build/ngAdapter';
 
 declare var window: any;
 window.adapter = new ngAdapter(angular.module('webendApp', []));

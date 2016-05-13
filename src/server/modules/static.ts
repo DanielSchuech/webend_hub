@@ -2,8 +2,6 @@ import TinyDiInjectable from '../tinydiinjectable';
 import * as express from 'express';
 import * as path from 'path';
 
-let config = require('../../config');
-
 export default class Static extends TinyDiInjectable {
   constructor(server: express.Application, config: any) {
     super();
@@ -30,7 +28,11 @@ export default class Static extends TinyDiInjectable {
     
     //deliver index.html
     server.get('*', (req, res) => {
-      res.sendFile(indexHTML);
+      if (config.useCustomIndexHtml) {
+        res.send(config['index.html']);
+      } else {
+        res.sendFile(indexHTML);
+      }
     });
     
   }

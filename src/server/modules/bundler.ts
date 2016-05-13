@@ -6,7 +6,7 @@ import {exec} from 'child_process';
 
 export default class FrontendBundler extends TinyDiInjectable {
   constructor(private deps: any, private autostart: any,
-      addManualStartListener: Function, status: any) {
+      addManualStartListener: Function, status: any, private config: any) {
     super();
     this.createBundle(this.autostart);
     addManualStartListener(() => {
@@ -48,7 +48,7 @@ export default class FrontendBundler extends TinyDiInjectable {
   
   createFileContent(startedPlugins: string[]) {
     let file = `import {Component, Directive, Injectable} from '@angular/core';\n`;
-    file += `import {dashToCamel} from 'ngAdapter/build/helper';`;
+    file += `import {dashToCamel} from 'ngadapter/build/helper';`;
     file += `let module = angular.module('webendApp');`;
     file += `declare var Reflect: any;\n`;
     file += `let components: any[] = [];\n`;
@@ -71,16 +71,19 @@ export default class FrontendBundler extends TinyDiInjectable {
       file += this.addPlugin(startedPlugins, plugin, loadedPlugins);
     });
     
-    file += `
-      module.component('webendHub', {
-          template: \`
-    `;
-    startedPlugins.forEach((plugin) => {
-      file += `<${plugin}></${plugin}>`;
-    });
-    file += `\`
-        });
-    `;
+    //add webendHub directive for auto binding
+    if (!this.config.useCustomIndexHtml) {
+      file += `
+        module.component('webendHub', {
+            template: \`
+      `;
+      startedPlugins.forEach((plugin) => {
+        file += `<${plugin}></${plugin}>`;
+      });
+      file += `\`
+          });
+      `;
+    }
     
     return file;
   }
@@ -318,6 +321,6 @@ export default class FrontendBundler extends TinyDiInjectable {
   
 }
 FrontendBundler.$inject = {
-  deps: ['dependencies', 'autostart', 'addManualStartListener', 'status'],
+  deps: ['dependencies', 'autostart', 'addManualStartListener', 'status', 'config'],
   callAs: 'class'
 };

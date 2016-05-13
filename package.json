@@ -10,9 +10,6 @@
     "build": "npm run compile && npm run copyJSONs && npm run buildApp",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
-  "webendConfig": {
-    "port": 3001
-  },
   "repository": {
     "type": "git",
     "url": "git+https://github.com/DanielSchuech/webend_hub.git"
@@ -53,5 +50,10 @@
     "copyfiles": "^0.2.1",
     "tslint": "^3.8.1",
     "typings": "^0.8.1"
+  },
+  "webendConfig": {
+    "port": 3001,
+    "useCustomIndexHtml": false,
+    "index.html": "<html>\n\t<head>\n\t\t<title>WebEnd Plugin System</title>\n\t</head>\n\t<body>\n\t\t<!--add your directive here -->\n\t\t<script src=\"bundle.js\"></script>\n\t</body>\n</html>\n"
   }
 }
