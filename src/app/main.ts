@@ -4,8 +4,10 @@ import 'angular';
 import {ngAdapter} from 'ngadapter/build/ngAdapter';
 
 declare var window: any;
-window.adapter = new ngAdapter(angular.module('webendApp', []));
+window.webend = {};
+declare var webend: any;
+webend.adapter = new ngAdapter(angular.module('webendApp', []));
 
 import './app.component';
 
-window.adapter.bootstrap(document.body, ['webendApp']);
+webend.adapter.bootstrap(document.body, ['webendApp']);

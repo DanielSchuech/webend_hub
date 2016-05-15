@@ -1,6 +1,6 @@
 import { Component, OnInit } from '@angular/core';
 
-declare var window: any;
+declare var webend: any;
 
 @Component({
   moduleId: module.id,
@@ -10,9 +10,9 @@ declare var window: any;
   `,
   /**
    * for optional directive use the following directive
-   * window.adapter.upgradeNg1Directive(window.getOptNg1Directive('redLight'))
+   * webend.adapter.upgradeNg1Directive(webend.getOptNg1Directive('redLight'))
    */
-  directives: [window.adapter.upgradeNg1Directive('redLight')]
+  directives: [webend.adapter.upgradeNg1Directive('redLight')]
 })
 export class MyPageUseNg1Component implements OnInit {
   constructor() { }

@@ -1,9 +1,9 @@
 let mod = angular.module('webend_myng1page', [])
   .directive('webendMyng1page', MyNg1Page);
 
-declare var window: any;
+declare var webend: any;
 
-ctrl.$inject = [window.getOptNg1Service('MyPageService'), '$scope'];
+ctrl.$inject = [webend.getOptNg1Service('MyPageService'), '$scope'];
 function ctrl(MyPageService: any, $scope: any) {
   $scope.secret = MyPageService.secret;
 }

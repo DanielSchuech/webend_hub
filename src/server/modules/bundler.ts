@@ -55,10 +55,10 @@ export default class FrontendBundler extends TinyDiInjectable {
     file += `let directives: any[] = [];\n`;
     file += `let services: any[] = [];\n`;
     file += `let meta: any;\n`;
-    file += `declare var window: any;\n`;
-    file += `window.components = components;\n`;
-    file += `window.directives = directives;\n`;
-    file += `window.services = services;\n`;
+    file += `declare var webend: any;\n`;
+    file += `webend.components = components;\n`;
+    file += `webend.directives = directives;\n`;
+    file += `webend.services = services;\n`;
     file += this.getComponentFn();
     file += this.getDirectiveFn();
     file += this.getServiceFn();
@@ -125,9 +125,9 @@ export default class FrontendBundler extends TinyDiInjectable {
   }
   
   getComponentFn() {
-    return `window.getComponent = (name: string) => {
+    return `webend.getComponent = (name: string) => {
       let found: any;
-      window.components.forEach((cmp: any) => {
+      webend.components.forEach((cmp: any) => {
         meta = Reflect.getOwnMetadata('annotations', cmp);
         if (meta && meta[0] && meta[0].selector === name) {
           found = cmp;
@@ -147,9 +147,9 @@ export default class FrontendBundler extends TinyDiInjectable {
   }
   
   getDirectiveFn() {
-    return `window.getDirective = (name: string) => {
+    return `webend.getDirective = (name: string) => {
       let found: any;
-      window.directives.forEach((cmp: any) => {
+      webend.directives.forEach((cmp: any) => {
         meta = Reflect.getOwnMetadata('annotations', cmp);
         if (meta && meta[0] && meta[0].selector === name) {
           found = cmp;
@@ -168,9 +168,9 @@ export default class FrontendBundler extends TinyDiInjectable {
   }
   
   getServiceFn() {
-    return `window.getService = (name: string) => {
+    return `webend.getService = (name: string) => {
       let found: any;
-      window.services.forEach((srv: any) => {
+      webend.services.forEach((srv: any) => {
         if (srv.name === name) {
           found = srv;
         }
@@ -199,20 +199,20 @@ export default class FrontendBundler extends TinyDiInjectable {
                 if (meta[0].template) {
                   components.push((<any>${plugin})[exp]);
                   module.directive(dashToCamel(meta[0].selector), 
-                    <any>window.adapter.downgradeNg2Component((<any>${plugin})[exp]));
+                    <any>webend.adapter.downgradeNg2Component((<any>${plugin})[exp]));
                 } else {
                   directives.push((<any>${plugin})[exp]);
                   let selector = meta[0].selector;
                   module.directive(dashToCamel(selector.substring(1, selector.length - 1)), 
-                    <any>window.adapter.downgradeNg2Directive((<any>${plugin})[exp]));
+                    <any>webend.adapter.downgradeNg2Directive((<any>${plugin})[exp]));
                 }
                 
               }
             }
             if (meta[0].constructor.name === 'InjectableMetadata') {
-              window.adapter.addProvider((<any>${plugin})[exp]);
+              webend.adapter.addProvider((<any>${plugin})[exp]);
               module.factory(exp, 
-                window.adapter.downgradeNg2Provider((<any>${plugin})[exp]));
+                webend.adapter.downgradeNg2Provider((<any>${plugin})[exp]));
               services.push((<any>${plugin})[exp]);
             }
           }
@@ -262,7 +262,7 @@ export default class FrontendBundler extends TinyDiInjectable {
         return exists;
       }
       
-      window.getOptNg1Service = (service: string) => {
+      webend.getOptNg1Service = (service: string) => {
         //check if service exists
         if (!existsNg1Service(service, module)) {
           //create empty service
@@ -305,7 +305,7 @@ export default class FrontendBundler extends TinyDiInjectable {
         return exists;
       }
       
-      window.getOptNg1Directive = (directive: string) => {
+      webend.getOptNg1Directive = (directive: string) => {
         //check if directive exists
         if (!existsNg1Directive(directive, module)) {
           //create empty directive
