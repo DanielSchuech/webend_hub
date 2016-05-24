@@ -11,6 +11,6 @@ export default class PluginSystem extends TinyDiInjectable {
   }
 }
 PluginSystem.$inject = {
-  deps: ['status', 'server'],
+  deps: ['status', 'hub_server'],
   callAs: 'class'
 };

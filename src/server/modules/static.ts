@@ -38,6 +38,6 @@ export default class Static extends TinyDiInjectable {
   }
 }
 Static.$inject = {
-  deps: ['server', 'config'],
+  deps: ['hub_server', 'config'],
   callAs: 'class'
 };
