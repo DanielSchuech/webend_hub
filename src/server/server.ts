@@ -24,7 +24,7 @@ export default class HUB extends TinyDiInjectable {
     this.injector.bind('addManualStartListener').to(addManualStartListener);
     
     this.app = express();
-    this.injector.bind('server').to(this.app);
+    this.injector.bind('hub_server').to(this.app);
     
     this.loadModules();
     
