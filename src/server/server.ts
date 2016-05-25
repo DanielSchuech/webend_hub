@@ -6,8 +6,8 @@ import TinyDiInjectable from './tinydiinjectable';
 let serverConfig = require('../config');
 
 export default class HUB extends TinyDiInjectable {
+  public app: express.Application;
   private injector: TinyDiInjector;
-  private app: express.Application;
   
   constructor(_config: any, deps: any, status: any, autostart: any, 
       addManualStartListener: Function) {

@@ -181,6 +181,7 @@ export default class FrontendBundler extends TinyDiInjectable {
       
       @Injectable()
       class WebendEmptyService {}
+      webend.adapter.addProvider(WebendEmptyService);
       return WebendEmptyService;
     };\n`;
   }
