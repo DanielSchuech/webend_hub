@@ -1,10 +1,13 @@
 import TinyDiInjectable from '../tinydiinjectable';
+import {Adapter} from '../../adapter/base';
 
 import * as fs from 'fs';
 import * as path from 'path';
 import {exec} from 'child_process';
 
 export default class FrontendBundler extends TinyDiInjectable {
+  private adapters: {[framework: string]: Adapter};
+
   constructor(private deps: any, private autostart: any,
       addManualStartListener: Function, status: any, private config: any) {
     super();
@@ -23,8 +26,17 @@ export default class FrontendBundler extends TinyDiInjectable {
         }
       });
     }
+
+    //load all required adapters
+    this.createAdapters(startedPlugins);
     
+    //create bundle entry content
     let file = this.createFileContent(startedPlugins);
+
+    //auto mod aktivated -> create index.html with elements for plug-ins
+    if (this.config.useCustomIndexHtml === 'false') {
+      this.createAutoIndexHTML(startedPlugins);
+    }
     
     let bundleFolder = path.normalize(__dirname + '/../../app/');
     let depFile = bundleFolder + 'app.component.ts';
@@ -33,7 +45,7 @@ export default class FrontendBundler extends TinyDiInjectable {
     fs.writeFile(depFile, file, (err) => {
       //bundle
       let configPath = path.normalize(__dirname + '/../../../webpack.config.js');
-      exec(`webpack --config ${configPath} ${bundleFolder}main.ts ${bundleFolder}bundle.js`, 
+      exec(`webpack --config ${configPath} ${depFile} ${bundleFolder}bundle.js`, 
         (error, stdout, stderr) => {
           if (error) {
             console.log(`Error on creating bundle: ${error}`);
@@ -47,43 +59,30 @@ export default class FrontendBundler extends TinyDiInjectable {
   }
   
   createFileContent(startedPlugins: string[]) {
-    let file = `import {Component, Directive, Injectable} from '@angular/core';\n`;
-    file += `import {dashToCamel} from 'ngadapter/build/helper';`;
-    file += `let module = angular.module('webendApp');`;
-    file += `declare var Reflect: any;\n`;
-    file += `let components: any[] = [];\n`;
-    file += `let directives: any[] = [];\n`;
-    file += `let services: any[] = [];\n`;
-    file += `let meta: any;\n`;
-    file += `declare var webend: any;\n`;
-    file += `webend.components = components;\n`;
-    file += `webend.directives = directives;\n`;
-    file += `webend.services = services;\n`;
-    file += this.getComponentFn();
-    file += this.getDirectiveFn();
-    file += this.getServiceFn();
-    file += this.getOptNg1Service();
-    file += this.getOptNg1Directive();
+    let file = `
+      (<any>window).webend = {};
+      declare var webend: any;
+    `;
+
+    //Adapter Phase 1: Initialisation
+    Object.keys(this.adapters).forEach((adapterName) => {
+      if (this.adapters[adapterName].initialise) {
+        file += this.adapters[adapterName].initialise();
+      }
+    });
     
-    //import plugin components
+    //Adapter Phase 2: Load all Plug-in Components
     let loadedPlugins: string[] = [];
     startedPlugins.forEach((plugin) => {
       file += this.addPlugin(startedPlugins, plugin, loadedPlugins);
     });
-    
-    //add webendHub directive for auto binding
-    if (!this.config.useCustomIndexHtml) {
-      file += `
-        module.component('webendHub', {
-            template: \`
-      `;
-      startedPlugins.forEach((plugin) => {
-        file += `<${plugin}></${plugin}>`;
-      });
-      file += `\`
-          });
-      `;
-    }
+
+    //Adapter Pase 3: Finalise
+    Object.keys(this.adapters).forEach((adapterName) => {
+      if (this.adapters[adapterName].initialise) {
+        file += this.adapters[adapterName].finalise();
+      }
+    });
     
     return file;
   }
@@ -113,212 +112,67 @@ export default class FrontendBundler extends TinyDiInjectable {
     }
 
     //load plugin
-    // file += `import * as ${plugin} from '${plugin}/${this.deps[plugin].browser.entry}';\n`;
-    let frameworks: any = {
-      angular: this.loadAngularJSPlugin.bind(this),
-      angular2: this.loadAngular2Plugin.bind(this)
-    };
-    file += frameworks[this.deps[plugin].browser.framework](plugin);
+    let framework = this.deps[plugin].browser.framework;
+    let pluginFile = this.deps[plugin].browser.entry;
+    file += this.adapters[framework].load(plugin, pluginFile);
     
     loadedPlugins.push(plugin);
     return file;
   }
-  
-  getComponentFn() {
-    return `webend.getComponent = (name: string) => {
-      let found: any;
-      webend.components.forEach((cmp: any) => {
-        meta = Reflect.getOwnMetadata('annotations', cmp);
-        if (meta && meta[0] && meta[0].selector === name) {
-          found = cmp;
+
+  createAdapters(plugins: string[]) {
+    this.adapters = {};
+
+    //determine frameworks
+    let frameworks: string[] = [];
+    plugins.forEach((plugin) => {
+      if (this.deps[plugin] && this.deps[plugin].browser && 
+        this.deps[plugin].browser.framework) {
+          let framework = this.deps[plugin].browser.framework;
+          if (frameworks.indexOf(framework) === -1) {
+            frameworks.push(framework);
+          }
+        }
+    });
+
+    //create adapters
+    frameworks.forEach((framework) => {
+      try {
+        let adapter = require(`../../adapter/${framework}`).default;
+        this.adapters[framework] = new adapter(this.deps, frameworks, this.config);
+      } catch (e) {
+        console.log(e);
+        throw new Error(`Cannot find adapter for framework: ${framework}`);
+      }
+    });
+  }
+
+  createAutoIndexHTML(startedPlugins: string[]) {
+    let indexHTML = `
+        <html>
+          <head>
+            <base href="/">
+          
+            <title>WebEnd Plugin System</title>
+          </head>
+          <body>
+      `;
+      Object.keys(this.adapters).forEach((adapter) => {
+        if (this.adapters[adapter].autoIndexHTMLBodyContent) {
+          indexHTML += this.adapters[adapter].autoIndexHTMLBodyContent();
         }
       });
-      if (found) {
-        return found;
+      indexHTML += `
+            <script src="bundle.js"></script>
+          </body>
+        </html>
+      `;
+      let indexPath = path.normalize(__dirname + '/../../app/index.html');
+      if (!fs.existsSync(path.dirname(indexPath))){
+        fs.mkdirSync(path.dirname(indexPath));
       }
-      
-      @Component({
-        template: '',
-        selector: 'webend-empty'
-      })
-      class WebendEmpty {}
-      return WebendEmpty;
-    };\n`;
+      fs.writeFileSync(indexPath, indexHTML);
   }
-  
-  getDirectiveFn() {
-    return `webend.getDirective = (name: string) => {
-      let found: any;
-      webend.directives.forEach((cmp: any) => {
-        meta = Reflect.getOwnMetadata('annotations', cmp);
-        if (meta && meta[0] && meta[0].selector === name) {
-          found = cmp;
-        }
-      });
-      if (found) {
-        return found;
-      }
-      
-      @Directive({
-        selector: 'webend-empty-directive'
-      })
-      class WebendEmptyDirective {}
-      return WebendEmptyDirective;
-    };\n`;
-  }
-  
-  getServiceFn() {
-    return `webend.getService = (name: string) => {
-      let found: any;
-      webend.services.forEach((srv: any) => {
-        if (srv.name === name) {
-          found = srv;
-        }
-      });
-      if (found) {
-        return found;
-      }
-      
-      @Injectable()
-      class WebendEmptyService {}
-      webend.adapter.addProvider(WebendEmptyService);
-      return WebendEmptyService;
-    };\n`;
-  }
-  
-  loadAngular2Plugin(plugin: string) {
-    return `
-      import * as ${plugin} from '${plugin}/${this.deps[plugin].browser.entry}';
-      if (${plugin}) {
-        Object.keys(${plugin}).forEach((exp) => {
-          meta = Reflect.getOwnMetadata('annotations', (<any>${plugin})[exp]);
-          if (meta && meta[0] && meta[0]) {
-            if (meta[0].constructor.name === 'ComponentMetadata' ||
-                meta[0].constructor.name === 'DirectiveMetadata') {
-              //bind to angular module
-              if (meta[0].selector) {
-                if (meta[0].template) {
-                  components.push((<any>${plugin})[exp]);
-                  module.directive(dashToCamel(meta[0].selector), 
-                    <any>webend.adapter.downgradeNg2Component((<any>${plugin})[exp]));
-                } else {
-                  directives.push((<any>${plugin})[exp]);
-                  let selector = meta[0].selector;
-                  module.directive(dashToCamel(selector.substring(1, selector.length - 1)), 
-                    <any>webend.adapter.downgradeNg2Directive((<any>${plugin})[exp]));
-                }
-                
-              }
-            }
-            if (meta[0].constructor.name === 'InjectableMetadata') {
-              webend.adapter.addProvider((<any>${plugin})[exp]);
-              module.factory(exp, 
-                webend.adapter.downgradeNg2Provider((<any>${plugin})[exp]));
-              services.push((<any>${plugin})[exp]);
-            }
-          }
-        });
-      }
-    `;
-  }
-  
-  loadAngularJSPlugin(plugin: string) {
-    return `
-      import '${plugin}/${this.deps[plugin].browser.entry}';
-      module.requires.push('${plugin}');
-    `;
-  }
-  
-  getOptNg1Service() {
-    return `
-      function existsNg1Service(service: string, module: angular.IModule) {
-        let queue: any[] = (<any>module)._invokeQueue;
-        let exists = false; 
-        queue.forEach((action: any[]) => {
-          if (action.length >= 3) {
-            /**
-             * action[0] i.e. $controllerProvider | $provide
-             * action[1] i.e. register | factory | directive
-             * action[2][0] name
-             * action[2][1] function
-             */
-            if ((action[1] === 'factory' ||
-              action[1] === 'service' ||
-              action[1] === 'provider')
-              && action[2][0] === service) {
-              exists = true;
-            }
-          }
-        });
-        
-        if (!exists && module.requires) {
-          //not found in current module -> search in required modules
-          for (let i = 0; i < module.requires.length; i++) {
-            exists = existsNg1Service(service, 
-              angular.module(module.requires[i]));
-            if (exists) {break; }
-          }
-        }
-        
-        return exists;
-      }
-      
-      webend.getOptNg1Service = (service: string) => {
-        //check if service exists
-        if (!existsNg1Service(service, module)) {
-          //create empty service
-          module.service(service, () => {return {}; });
-        }
-        
-        return service;
-      };
-    `;
-  }
-  
-  getOptNg1Directive() {
-    return `
-      function existsNg1Directive(directive: string, module: angular.IModule) {
-        let queue: any[] = (<any>module)._invokeQueue;
-        let exists = false; 
-        queue.forEach((action: any[]) => {
-          if (action.length >= 3) {
-            /**
-             * action[0] i.e. $controllerProvider | $provide
-             * action[1] i.e. register | factory | directive
-             * action[2][0] name
-             * action[2][1] function
-             */
-            if (action[1] === 'directive' && action[2][0] === directive) {
-              exists = true;
-            }
-          }
-        });
-        
-        if (!exists && module.requires) {
-          //not found in current module -> search in required modules
-          for (let i = 0; i < module.requires.length; i++) {
-            exists = existsNg1Directive(directive, 
-              angular.module(module.requires[i]));
-            if (exists) {break; }
-          }
-        }
-        
-        return exists;
-      }
-      
-      webend.getOptNg1Directive = (directive: string) => {
-        //check if directive exists
-        if (!existsNg1Directive(directive, module)) {
-          //create empty directive
-          module.directive(directive, () => {return {link: () => {}}; });
-        }
-        
-        return directive;
-      };
-    `;
-  }
-  
-  
   
 }
 FrontendBundler.$inject = {

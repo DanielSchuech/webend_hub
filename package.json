@@ -4,10 +4,9 @@
   "description": "Frontend Hub For Webend",
   "main": "build/server/server.js",
   "scripts": {
-    "buildApp": "cd src && copyfiles app/index.html ../build  && copyfiles app/main.ts ../build",
     "copyJSONs": "cd src && copyfiles *.json **/*.json ../build",
     "compile": "tsc",
-    "build": "npm run compile && npm run copyJSONs && npm run buildApp",
+    "build": "npm run compile && npm run copyJSONs",
     "test": "echo \"Error: no test specified\" && exit 1",
     "postinstall": "typings install"
   },

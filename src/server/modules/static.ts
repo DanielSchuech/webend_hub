@@ -28,7 +28,7 @@ export default class Static extends TinyDiInjectable {
     
     //deliver index.html
     server.get('/', (req, res) => {
-      if (config.useCustomIndexHtml) {
+      if (config.useCustomIndexHtml === 'true') {
         res.send(config['index.html']);
       } else {
         res.sendFile(indexHTML);
