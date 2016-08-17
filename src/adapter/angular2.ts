@@ -23,63 +23,42 @@ export default class Angular2Adapter implements Adapter {
     init += `webend.components = components;\n`;
     init += `webend.directives = directives;\n`;
     init += `webend.services = services;\n`;
+    init += `webend.ng2Modules = [];\n`;
     init += this.getComponentFn();
     init += this.getDirectiveFn();
     init += this.getServiceFn();
+    init += this.processElement();
+    init += this.uniqFn();
 
     return init;
   }
 
   load(plugin: string, entryFile: string) {
     this.loadedPlugins.push(plugin);
+
     let code = `
       import * as ${plugin} from '${plugin}/${entryFile}';
+
+      // process ngModul
+      if (${plugin}.default) {
+        let moduleMeta = Reflect.getOwnMetadata('annotations', ${plugin}.default);
+        if (moduleMeta && moduleMeta[0]) {
+          let dec = moduleMeta[0].declarations || [];
+          let exp = moduleMeta[0].exports || [];
+          uniq(dec.concat(exp))
+            .forEach((type: any) => {processEl(type)});
+
+          let prov = moduleMeta[0].providers;
+          prov && prov.forEach((type: any) => {processEl(type)});
+        }
+        webend.ng2Modules.push(${plugin}.default);
+        delete ${plugin}.default;
+      }
+
+      // process single exports
       if (${plugin}) {
         Object.keys(${plugin}).forEach((exp) => {
-          meta = Reflect.getOwnMetadata('annotations', (<any>${plugin})[exp]);
-          if (meta && meta[0] && meta[0]) {
-            if (meta[0].constructor.name === 'ComponentMetadata' ||
-                meta[0].constructor.name === 'DirectiveMetadata') {
-              //bind to angular module
-              if (meta[0].selector) {
-                if (meta[0].template) {
-                  components.push((<any>${plugin})[exp]);
-    `;
-    if (this.enabledAngularJS) {
-      code += `
-                  module.directive(dashToCamel(meta[0].selector), 
-                    <any>webend.adapter.downgradeNg2Component((<any>${plugin})[exp]));
-      `;
-    }
-    code += `
-                } else {
-                  directives.push((<any>${plugin})[exp]);
-                  let selector = meta[0].selector;
-    `;
-    if (this.enabledAngularJS) {
-      code += `
-                  module.directive(dashToCamel(selector.substring(1, selector.length - 1)), 
-                    <any>webend.adapter.downgradeNg2Directive((<any>${plugin})[exp]));
-      `;
-    }
-    code += `
-                }
-                
-              }
-            }
-            if (meta[0].constructor.name === 'InjectableMetadata') {
-    `;
-    if (this.enabledAngularJS) {
-      code += `
-              webend.adapter.addProvider((<any>${plugin})[exp]);
-              module.factory(exp, 
-                webend.adapter.downgradeNg2Provider((<any>${plugin})[exp]));
-      `;
-    }
-    code += `
-              services.push((<any>${plugin})[exp]);
-            }
-          }
+          processEl((<any>${plugin})[exp]);
         });
       }
     `;
@@ -106,13 +85,25 @@ export default class Angular2Adapter implements Adapter {
       final += `
         @Component({
           selector: 'ng2-hub',
-          template: \`${template}\`,
-          directives: webend.components
+          template: \`${template}\`
         })
         class ng2Hub {}
 
-        import { bootstrap }    from '@angular/platform-browser-dynamic';
-        bootstrap(ng2Hub);
+        import {NgModule} from '@angular/core';
+        import {BrowserModule} from '@angular/platform-browser';
+        import {platformBrowserDynamic}  from '@angular/platform-browser-dynamic';
+        
+        let imports = webend.ng2Modules;
+        imports.unshift(BrowserModule);
+
+        @NgModule({
+          imports: imports,
+          declarations: [ng2Hub],
+          bootstrap: [ng2Hub]
+        })
+        class ng2HubModule {}
+
+        platformBrowserDynamic().bootstrapModule(ng2HubModule);
       `;
     }
 
@@ -132,6 +123,58 @@ export default class Angular2Adapter implements Adapter {
       template += `<${plugin}></${plugin}>`;
     });
     return template;
+  }
+
+  processElement() {
+    let code = `
+        function processEl(elem: any) {
+          meta = Reflect.getOwnMetadata('annotations', elem);
+          if (meta && meta[0] && meta[0]) {
+            if (meta[0].constructor.name === 'ComponentMetadata' ||
+                meta[0].constructor.name === 'DirectiveMetadata') {
+              //bind to angular module
+              if (meta[0].selector) {
+                if (meta[0].template) {
+                  components.push(elem);
+    `;
+    if (this.enabledAngularJS) {
+      code += `
+                  module.directive(dashToCamel(meta[0].selector), 
+                    <any>webend.adapter.downgradeNg2Component(elem);
+      `;
+    }
+    code += `
+                } else {
+                  directives.push(elem);
+                  let selector = meta[0].selector;
+    `;
+    if (this.enabledAngularJS) {
+      code += `
+                  module.directive(dashToCamel(selector.substring(1, selector.length - 1)), 
+                    <any>webend.adapter.downgradeNg2Directive(elem);
+      `;
+    }
+    code += `
+                }
+                
+              }
+            }
+            if (meta[0].constructor.name === 'InjectableMetadata') {
+    `;
+    if (this.enabledAngularJS) {
+      code += `
+              webend.adapter.addProvider(elem);
+              module.factory(exp, 
+                webend.adapter.downgradeNg2Provider(elem);
+      `;
+    }
+    code += `
+              services.push(elem);
+            }
+          }
+        }
+    `;
+    return code;
   }
 
   getComponentFn() {
@@ -204,5 +247,15 @@ export default class Angular2Adapter implements Adapter {
     `;
 
     return code;
+  }
+
+  uniqFn() {
+    return `
+      function uniq(a: any[]) {
+        return a.sort().filter(function(item: any, pos: number, ary: any) {
+            return !pos || item != ary[pos - 1];
+        });
+      }
+    `;
   }
 }
