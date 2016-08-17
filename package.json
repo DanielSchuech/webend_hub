@@ -1,6 +1,6 @@
 {
   "name": "webend_hub",
-  "version": "0.1.4",
+  "version": "0.2.0",
   "description": "Frontend Hub For Webend",
   "main": "build/server/server.js",
   "scripts": {
