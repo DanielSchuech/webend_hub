@@ -12,7 +12,7 @@ export default class Angular2Adapter implements Adapter {
       import 'zone.js/dist/zone';
       import 'reflect-metadata';
     `;
-    init += `import {Component, Directive, Injectable} from '@angular/core';\n`;
+    init += `import {Component, Directive, Injectable, NgModule} from '@angular/core';\n`;
     init += `import {dashToCamel} from 'ngadapter/build/helper';`;
     init += `declare var Reflect: any;\n`;
     init += `let components: any[] = [];\n`;
@@ -27,6 +27,7 @@ export default class Angular2Adapter implements Adapter {
     init += this.getComponentFn();
     init += this.getDirectiveFn();
     init += this.getServiceFn();
+    init += this.getModulFn();
     init += this.processElement();
     init += this.uniqFn();
 
@@ -89,7 +90,6 @@ export default class Angular2Adapter implements Adapter {
         })
         class ng2Hub {}
 
-        import {NgModule} from '@angular/core';
         import {BrowserModule} from '@angular/platform-browser';
         import {platformBrowserDynamic}  from '@angular/platform-browser-dynamic';
         
@@ -217,6 +217,24 @@ export default class Angular2Adapter implements Adapter {
       })
       class WebendEmptyDirective {}
       return WebendEmptyDirective;
+    };\n`;
+  }
+
+  getModulFn() {
+    return `webend.getModule = (name: string) => {
+      let found: any;
+      webend.ng2Modules.forEach((mod: any) => {
+        if (mod.name === name) {
+          found = mod;
+        }
+      });
+      if (found) {
+        return found;
+      }
+      
+      @NgModule({})
+      class WebendEmptyModule {}
+      return WebendEmptyModule;
     };\n`;
   }
   
