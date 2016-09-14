@@ -125,41 +125,48 @@ export default class Angular2Adapter implements Adapter {
     return template;
   }
 
+  /**
+   * Angular 2 RC6 replaced different metadata with one devoratorfactory for all types
+   * Currently recognition:
+   *  component: existing selector and template
+   *  directive: existing selector and no template
+   *  service: annotations metadata undefined and parameters metadata empty array
+   * 
+   * should not be called with NgModules!!! they will be recognized as services!!!
+   */
   processElement() {
     let code = `
         function processEl(elem: any) {
           meta = Reflect.getOwnMetadata('annotations', elem);
           if (meta && meta[0] && meta[0]) {
-            if (meta[0].constructor.name === 'ComponentMetadata' ||
-                meta[0].constructor.name === 'DirectiveMetadata') {
+            if (!!meta[0].selector) {
               //bind to angular module
-              if (meta[0].selector) {
-                if (meta[0].template) {
-                  components.push(elem);
+              if (!!meta[0].template) {
+                components.push(elem);
     `;
     if (this.enabledAngularJS) {
       code += `
-                  module.directive(dashToCamel(meta[0].selector), 
-                    <any>webend.adapter.downgradeNg2Component(elem);
+                module.directive(dashToCamel(meta[0].selector), 
+                  <any>webend.adapter.downgradeNg2Component(elem);
       `;
     }
     code += `
-                } else {
-                  directives.push(elem);
-                  let selector = meta[0].selector;
+              } else {
+                directives.push(elem);
+                let selector = meta[0].selector;
     `;
     if (this.enabledAngularJS) {
       code += `
-                  module.directive(dashToCamel(selector.substring(1, selector.length - 1)), 
-                    <any>webend.adapter.downgradeNg2Directive(elem);
+                module.directive(dashToCamel(selector.substring(1, selector.length - 1)), 
+                  <any>webend.adapter.downgradeNg2Directive(elem);
       `;
     }
     code += `
-                }
-                
               }
             }
-            if (meta[0].constructor.name === 'InjectableMetadata') {
+          } else {
+            let designparams = Reflect.getOwnMetadata('design:paramtypes', elem);
+            if (!meta && Array.isArray(designparams) && designparams.length === 0) {
     `;
     if (this.enabledAngularJS) {
       code += `
