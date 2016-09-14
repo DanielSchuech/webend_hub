@@ -1,5 +1,6 @@
 import TinyDiInjectable from '../tinydiinjectable';
 import {Adapter} from '../../adapter/base';
+import {getWebpackConfigPath} from '../helper';
 
 import * as fs from 'fs';
 import * as path from 'path';
@@ -44,7 +45,7 @@ export default class FrontendBundler extends TinyDiInjectable {
     //write file
     fs.writeFile(depFile, file, (err) => {
       //bundle
-      let configPath = path.normalize(__dirname + '/../../../webpack.config.js');
+      let configPath = getWebpackConfigPath();
       exec(`webpack --config ${configPath} ${depFile} ${bundleFolder}bundle.js`, 
         (error, stdout, stderr) => {
           if (error) {
