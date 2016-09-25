@@ -130,7 +130,7 @@ export default class Angular2Adapter implements Adapter {
    * Currently recognition:
    *  component: existing selector and template
    *  directive: existing selector and no template
-   *  service: annotations metadata undefined and parameters metadata empty array
+   *  service: annotations metadata undefined
    * 
    * should not be called with NgModules!!! they will be recognized as services!!!
    */
@@ -166,7 +166,7 @@ export default class Angular2Adapter implements Adapter {
             }
           } else {
             let designparams = Reflect.getOwnMetadata('design:paramtypes', elem);
-            if (!meta && Array.isArray(designparams) && designparams.length === 0) {
+            if (!meta) {
     `;
     if (this.enabledAngularJS) {
       code += `
