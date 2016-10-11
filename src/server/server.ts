@@ -1,5 +1,6 @@
 import Injector = require('tiny-di');
 import * as express from 'express';
+import * as http from 'http';
 import * as path from 'path';
 import TinyDiInjectable from './tinydiinjectable';
 
@@ -7,6 +8,7 @@ let serverConfig = require('../config');
 
 export default class HUB extends TinyDiInjectable {
   public app: express.Application;
+  public server: http.Server;
   private injector: TinyDiInjector;
   
   constructor(_config: any, deps: any, status: any, autostart: any, 
@@ -28,7 +30,7 @@ export default class HUB extends TinyDiInjectable {
     
     this.loadModules();
     
-    this.app.listen(config.port);
+    this.server = this.app.listen(config.port);
   }
   
   dependencyResolver(moduleId: string) {
